@@ -1,7 +1,82 @@
-﻿@page "/"
+﻿@using Models
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
+@page "/"
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+<PageTitle>Game Catalog</PageTitle>
+
+<h1>Game Catalog</h1>
+
+<div class="row mb-4">
+  <div class="col-sm-6">
+    <button type="button" class="btn btn-primary" @onclick="CreateGame">New Game</button>
+  </div>
+</div>
+
+@if (games is null) 
+{
+  <p><em>Loading...</em></p>
+} 
+else 
+{
+
+  <DeleteGame Game="@currentGame" OnClose="@OnDeleteModalClose"></DeleteGame>
+
+  <table class="table table-striped table-bordered table-hover">
+    <thead class="table-dark">
+      <th>Id</th>
+      <th>Name</th>
+      <th>Genre</th>
+      <th>Price</th>
+      <th>Release Date</th>
+      <th></th>
+    </thead>
+    <tbody>
+      @foreach (var game in games)
+      {
+        <tr>
+          <td>@game.Id</td>
+          <td>@game.Name</td>
+          <td>@game.Genre</td>
+          <td>@game.Price</td>
+          <td>@game.ReleaseDate.ToShortDateString()</td>
+          <td>
+            <button class="btn btn-primary" @onclick="(() => EditGame(game.Id))">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-danger" 
+                data-bs-toggle="modal" 
+                data-bs-target="#deleteModal"
+                @onclick="(() => currentGame = game)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@code {
+    private Game[]? games;
+    private Game? currentGame;
+
+    protected override void OnInitialized() 
+    {
+      games  = GameClient.GetGames();
+    }
+
+    private void CreateGame() => NavigationManager.NavigateTo("/game");
+
+    private void EditGame(int id) => NavigationManager.NavigateTo($"/game/{id}");
+
+    private void OnDeleteModalClose(bool accepted) 
+    {
+      if (accepted) 
+      {
+        GameClient.DeleteGame(currentGame!.Id);
+        games = GameClient.GetGames();
+      }
+    }
+}
