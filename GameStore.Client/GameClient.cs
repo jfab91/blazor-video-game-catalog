@@ -1,63 +1,38 @@
 using GameStore.Client.Models;
+using System.Net.Http.Json;
 
 namespace GameStore.Client;
 
-public static class GameClient
+public class GameClient
 {
-    private static readonly List<Game> games =
-    [
-      new Game() 
-      {
-        Id = 1,
-        Name = "The Legend of Zelda: Breath of the Wild",
-        Genre = "Adventure",
-        Price = 59.99m,
-        ReleaseDate = new DateTime(2017, 3, 3)
-      },
-      new Game() 
-      {
-        Id = 2,
-        Name = "Super Mario Odyssey",
-        Genre = "Platformer",
-        Price = 59.99m,
-        ReleaseDate = new DateTime(2017, 10, 27)
-      },
-      new Game() 
-      {
-        Id = 3,
-        Name = "Grand Theft Auto V",
-        Genre = "Action",
-        Price = 29.99m,
-        ReleaseDate = new DateTime(2013, 9, 17)
-      }
-    ];
+  private readonly HttpClient _httpClient;
 
-    public static Game[] GetGames() => [.. games];
+  public GameClient(HttpClient httpClient)
+  {
+    _httpClient = httpClient;
+  }
 
-    public static void AddGame(Game game) 
-    {
-      game.Id = games.Max(g => g.Id) + 1;
-      games.Add(game);
-    }
+  public async Task<Game[]?> GetGamesAsync() 
+  {
+    return await _httpClient.GetFromJsonAsync<Game[]>("games");
+  }
+  public async Task AddGameAsync(Game game) 
+  {
+    await _httpClient.PostAsJsonAsync("games", game);
+  }
 
-    public static Game GetGame(int id) 
-    {
-      return games.Find(game => game.Id == id) ?? throw new Exception("Could not find game");
-    }
+  public async Task<Game> GetGameAsync(int id) 
+  {
+    return await _httpClient.GetFromJsonAsync<Game>($"games/{id}") ?? throw new Exception("Could not find the game");
+  }
 
-    public static void UpdateGame(Game updatedGame) 
-    {
-      var existingGame = GetGame(updatedGame.Id);
+  public async Task UpdateGameAsync(Game updatedGame) 
+  {
+    await this._httpClient.PutAsJsonAsync($"games/{updatedGame.Id}", updatedGame);
+  }
 
-      existingGame.Name = updatedGame.Name;
-      existingGame.Genre = updatedGame.Genre;
-      existingGame.Price = updatedGame.Price;
-      existingGame.ReleaseDate = updatedGame.ReleaseDate;
-    }
-
-    public static void DeleteGame(int id) 
-    {
-      var existingGame = GetGame(id);
-      games.Remove(existingGame);
-    }
+  public async Task DeleteGameAsync(int id) 
+  {
+    await this._httpClient.DeleteAsync($"games/{id}");
+  }
 }
