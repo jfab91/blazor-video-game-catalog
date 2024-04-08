@@ -23,11 +23,7 @@ var group = app.MapGroup("/games").WithParameterValidation();
 
 // GET /games
 group.MapGet("/", async (GameStoreContext context) => 
-{
-  var games = await context.Games.AsNoTracking().ToListAsync();
-  
-  Results.Ok(games);
-});
+  await context.Games.AsNoTracking().ToListAsync());
 
 // GET /games/{id}
 group.MapGet("/{id:int}", async (int id, GameStoreContext context) => 
